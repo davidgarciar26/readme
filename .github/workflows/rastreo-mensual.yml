@@ -1,0 +1,27 @@
+name: Rastreo mensual de agencias
+
+on:
+  schedule:
+    - cron: "17 14 1 * *"   # día 1 de cada mes, 08:17 hora CDMX
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rastrear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Buscar noticias del último mes
+        run: python3 scripts/rastrear_noticias.py --dias 35
+      - name: Guardar resultados
+        run: |
+          git config user.name "rastreador-bot"
+          git config user.email "rastreador-bot@users.noreply.github.com"
+          git add data/noticias_detectadas.csv
+          git diff --cached --quiet || git commit -m "Rastreo mensual: $(date +%Y-%m)"
+          git push
